@@ -2,6 +2,11 @@ from flask import Flask, render_template
 
 app = Flask(__name__)
 
+@app.route('/')
+def predict():
+    """Prediction Page"""
+    return render_template('index.html')
+
 
 @app.route('/page1')
 def page1():

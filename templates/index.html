@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Review Sentiment Analyzer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Amazon Review Sentiment Analyzer</h1>
+
+        <form action="/predict" method="post">
+            <textarea name="review" placeholder="Type your review here..."></textarea><br>
+            <button type="submit">Analyze Sentiment</button>
+        </form>
+
+        {% if prediction_text %}
+        <div class="result {% if 'Positive' in prediction_text %}positive{% else %}negative{% endif %}">
+            {{ prediction_text }}
+        </div>
+        {% endif %}
+    </div>
+
+    <footer>
+        Made with ❤️ using TensorFlow & Flask
+    </footer>
+</body>
+</html>
