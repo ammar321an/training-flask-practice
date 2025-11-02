@@ -3,96 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RUL Prediction</title>
+    <title>Time Series Forecasting</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* === Page Style === */
         body {
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #74ABE2, #5563DE);
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             height: 100vh;
             margin: 0;
+            color: #333;
         }
 
-        .container {
-            background: #ffffff;
-            padding: 40px 50px;
+        .card {
+            background-color: #fff;
+            width: 480px;
             border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.15);
+            padding: 40px 45px;
             text-align: center;
-            width: 90%;
-            max-width: 700px;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
         }
 
         h1 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 28px;
+            color: #4A4AD8;
+            font-size: 1.8em;
+            margin-bottom: 10px;
         }
 
         p {
+            font-size: 0.95em;
             color: #555;
-            font-size: 16px;
             margin-bottom: 20px;
         }
 
-        form {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 8px;
-        }
-
         input[type="text"] {
-            width: 70px;
-            padding: 8px;
+            width: 100%;
+            padding: 12px 15px;
             border: 1px solid #ccc;
-            border-radius: 6px;
-            text-align: center;
-            transition: 0.2s;
+            border-radius: 10px;
+            font-size: 0.95em;
+            outline: none;
+            transition: all 0.3s ease;
         }
 
         input[type="text"]:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
-            outline: none;
+            border-color: #4A4AD8;
+            box-shadow: 0 0 5px rgba(74, 74, 216, 0.3);
         }
 
         button {
-            background-color: #007bff;
+            background-color: #4A4AD8;
             color: white;
             border: none;
-            border-radius: 8px;
-            padding: 10px 25px;
-            font-size: 16px;
-            margin-top: 20px;
+            padding: 12px 20px;
+            border-radius: 10px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            font-size: 1em;
+            transition: background 0.3s ease;
+            width: 100%;
+            margin-top: 15px;
         }
 
         button:hover {
-            background-color: #0056b3;
+            background-color: #3940b3;
         }
 
-        h2 {
+        .result {
+            background-color: #F0F3FF;
+            border-left: 5px solid #4A4AD8;
+            padding: 15px;
+            border-radius: 10px;
             margin-top: 25px;
+            font-weight: 500;
             color: #333;
-            font-size: 22px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .error {
+            color: #b30000;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        canvas {
+            margin-top: 25px;
+        }
+
+        .footer {
+            margin-top: 25px;
+            font-size: 0.8em;
+            color: #777;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>RUL Prediction App</h1>
-        <p>Enter 24 sensor values below:</p>
+    <div class="card">
+        <h1>🌤️ Temperature Forecasting</h1>
+        <p>Enter the last <strong>10 temperature readings</strong> (comma-separated):</p>
+
         <form action="/predict" method="post">
-            {% for i in range(24) %}
-                <input type="text" name="sensor{{i+1}}" placeholder="S{{i+1}}">
-            {% endfor %}
-            <br/><br/><button type="submit">Predict</button>
+            <input type="text" name="values" placeholder="25.3, 26.1, 27.0, ..." required>
+            <button type="submit">Predict Next Temperature</button>
         </form>
-        <h2>{{ prediction_text }}</h2>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        {% if prediction %}
+            <div class="result">
+                Predicted next temperature: <strong>{{ prediction }}</strong>
+            </div>
+
+            <canvas id="forecastChart" width="400" height="200"></canvas>
+
+            
+            <script>
+                const ctx = document.getElementById('forecastChart').getContext('2d');
+                const chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: {{ chart_labels|tojson }},
+                        datasets: [{
+                            label: 'Temperature (°C)',
+                            data: {{ chart_values|tojson }},
+                            borderColor: '#4A4AD8',
+                            backgroundColor: 'rgba(74, 74, 216, 0.2)',
+                            tension: 0.3,
+                            fill: true,
+                            pointRadius: 5,
+                            pointBackgroundColor: '#4A4AD8'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: { beginAtZero: false }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            title: {
+                                display: true,
+                                text: 'Past 10 + Next Forecast'
+                            }
+                        }
+                    }
+                });
+            </script>
+        {% endif %}
+
+        <div class="footer">
+            Powered by Flask · LSTM Deep Learning Model
+        </div>
     </div>
 </body>
 </html>
